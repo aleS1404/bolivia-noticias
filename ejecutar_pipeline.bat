@@ -13,7 +13,7 @@ SET PROYECTO=C:\Users\ALEXANDRA\Desktop\bolivia_noticias
 
 REM Ruta al ejecutable de Python del entorno virtual (recomendado)
 REM Si no usas venv, usa simplemente: SET PYTHON=python
-SET PYTHON=%PROYECTO%\venv\Scripts\python.exe
+SET PYTHON=%PROYECTO%\venv312\Scripts\python.exe
 
 REM ================================================================
 REM No editar debajo de esta línea
