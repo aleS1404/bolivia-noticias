@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bolivia Noticias — Dashboard</title>
+  <style>
+    :root {
+      --azul:    #1a56db;
+      --verde:   #057a55;
+      --rojo:    #c81e1e;
+      --gris-bg: #f3f4f6;
+      --gris-bd: #e5e7eb;
+      --texto:   #111827;
+      --muted:   #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: var(--gris-bg); color: var(--texto); }
+
+    /* Navbar */
+    nav {
+      background: var(--azul); color: white; padding: 14px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    nav h1 { font-size: 1.2rem; font-weight: 600; }
+    nav a { color: white; text-decoration: none; margin-left: 20px; font-size: 0.9rem; }
+    nav a:hover { text-decoration: underline; }
+
+    /* Layout */
+    main { max-width: 1100px; margin: 28px auto; padding: 0 16px; }
+
+    /* Cards de estadísticas */
+    .stats-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 16px; margin-bottom: 28px;
+    }
+    .stat-card {
+      background: white; border: 1px solid var(--gris-bd);
+      border-radius: 10px; padding: 18px 20px;
+    }
+    .stat-card .numero { font-size: 2rem; font-weight: 700; color: var(--azul); }
+    .stat-card .etiqueta { font-size: 0.85rem; color: var(--muted); margin-top: 4px; }
+
+    /* Botón pipeline */
+    .acciones { margin-bottom: 24px; display: flex; gap: 12px; align-items: center; }
+    button.btn-pipeline {
+      background: var(--verde); color: white; border: none;
+      padding: 10px 20px; border-radius: 8px; cursor: pointer;
+      font-size: 0.9rem; font-weight: 500;
+    }
+    button.btn-pipeline:hover { background: #046c4e; }
+    button.btn-pipeline:disabled { background: var(--muted); cursor: not-allowed; }
+    #estado-pipeline { font-size: 0.85rem; color: var(--muted); }
+
+    /* Tabla de noticias */
+    
+    .tabla-wrapper {
+      background: white; border: 1px solid var(--gris-bd);
+      border-radius: 10px; overflow: hidden;
+    }
+    .tabla-header {
+      padding: 16px 20px; border-bottom: 1px solid var(--gris-bd);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .tabla-header h2 { font-size: 1rem; font-weight: 600; }
+    table { width: 100%; border-collapse: collapse; }
+    th {
+      text-align: left; padding: 10px 16px;
+      background: var(--gris-bg); font-size: 0.8rem;
+      color: var(--muted); text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    td { padding: 12px 16px; border-top: 1px solid var(--gris-bd); font-size: 0.88rem; }
+    tr:hover td { background: #f9fafb; }
+    td a { color: var(--azul); text-decoration: none; }
+    td a:hover { text-decoration: underline; }
+
+    /* Badges de fuente */
+    .badge {
+      display: inline-block; padding: 2px 8px; border-radius: 12px;
+      font-size: 0.75rem; font-weight: 500;
+    }
+    .badge-lt { background: #dbeafe; color: #1e40af; }
+    .badge-ru { background: #fde8d8; color: #9a3412; }
+
+    /* Texto cortado */
+    .texto-cortado {
+      max-width: 380px; white-space: nowrap;
+      overflow: hidden; text-overflow: ellipsis; color: var(--muted);
+    }
+  </style>
+</head>
+<body>
+
+<nav>
+  <h1>🗺️ Bolivia Noticias</h1>
+  <div>
+    <a href="/">Dashboard</a>
+    <a href="/chatbot">Chatbot</a>
+  </div>
+</nav>
+
+<main>
+
+  <!-- Estadísticas -->
+  <div class="stats-grid">
+    <div class="stat-card">
+      <div class="numero">{{ stats.total }}</div>
+      <div class="etiqueta">Noticias totales</div>
+    </div>
+    <div class="stat-card">
+      <div class="numero">{{ stats.editadas }}</div>
+      <div class="etiqueta">Noticias editadas</div>
+    </div>
+    {% for fuente, total in stats.por_fuente.items() %}
+    <div class="stat-card">
+      <div class="numero">{{ total }}</div>
+      <div class="etiqueta">{{ fuente }}</div>
+    </div>
+    {% endfor %}
+  </div>
+
+  <!-- Acción: ejecutar pipeline -->
+  <div class="acciones">
+    <button class="btn-pipeline" onclick="ejecutarPipeline()" id="btn-pipeline">
+      ▶ Ejecutar scraping ahora
+    </button>
+    <span id="estado-pipeline">El pipeline también se ejecuta automáticamente cada hora.</span>
+  </div>
+
+  <div class="tabla-wrapper" style="margin-bottom: 20px;">
+    <div class="tabla-header">
+      <h2>Filtros de búsqueda</h2>
+    </div>
+
+    <form method="get" style="padding: 16px 20px; display: grid; grid-template-columns: 1fr 180px 160px 120px; gap: 12px;">
+      <input 
+        type="text" 
+        name="q" 
+        value="{{ q or '' }}"
+        placeholder="Buscar por palabra clave..."
+        style="padding: 10px; border: 1px solid var(--gris-bd); border-radius: 8px;"
+      >
+
+      <select 
+        name="topico"
+        style="padding: 10px; border: 1px solid var(--gris-bd); border-radius: 8px;"
+      >
+        <option value="">Todos los tópicos</option>
+        {% for t in topicos %}
+        <option value="{{ t }}" {% if topico_actual == t %}selected{% endif %}>
+          {{ t|capitalize }}
+        </option>
+        {% endfor %}
+      </select>
+
+      <input 
+        type="date" 
+        name="fecha" 
+        value="{{ fecha_actual or '' }}"
+        style="padding: 10px; border: 1px solid var(--gris-bd); border-radius: 8px;"
+      >
+
+      <button 
+        type="submit"
+        style="background: var(--azul); color: white; border: none; border-radius: 8px; cursor: pointer;"
+      >
+        Filtrar
+      </button>
+    </form>
+  </div>
+
+  <!-- Tabla de noticias -->
+  <div class="tabla-wrapper">
+    <div class="tabla-header">
+      <h2>Últimas noticias ({{ noticias|length }})</h2>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Fuente</th>
+          <th>Tópico</th>
+          <th>Título</th>
+          <th>Extracto</th>
+          <th>Fecha</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for n in noticias %}
+        <tr>
+          <td>
+            <span class="badge {% if 'Tiempos' in n.fuente %}badge-lt{% else %}badge-ru{% endif %}">
+              {{ n.fuente }}
+            </span>
+          </td>
+          <td>
+            <span class="badge badge-lt">
+              {{ n.topico|capitalize }}
+            </span>
+          </td>
+          <td>
+            <a href="{{ n.url }}" target="_blank" rel="noopener">
+              {{ n.titulo[:70] }}{% if n.titulo|length > 70 %}…{% endif %}
+            </a>
+          </td>
+          <td>
+            <span class="texto-cortado">{{ n.texto[:120] }}…</span>
+          </td>
+          <td>{{ (n.fecha_pub or n.fecha_scrape)[:10] }}</td>
+        </tr>
+        {% else %}
+        <tr>
+          <td colspan="5" style="text-align:center; padding:32px; color:var(--muted);">
+            No hay noticias. Ejecuta el scraping con el botón de arriba.
+          </td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<script>
+async function ejecutarPipeline() {
+  const btn = document.getElementById("btn-pipeline");
+  const estado = document.getElementById("estado-pipeline");
+  btn.disabled = true;
+  btn.textContent = "⏳ Ejecutando...";
+  estado.textContent = "Scrapeando noticias, por favor espera...";
+
+  try {
+    const resp = await fetch("/api/pipeline", { method: "POST" });
+    const data = await resp.json();
+    if (data.ok) {
+      const r = data.resumen;
+      estado.textContent = `✅ Completado: ${r.nuevas||0} nuevas, ${r.actualizadas||0} actualizadas.`;
+      setTimeout(() => location.reload(), 2000);
+    } else {
+      estado.textContent = `❌ Error: ${data.error}`;
+    }
+  } catch (e) {
+    estado.textContent = `❌ Error de conexión: ${e}`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "▶ Ejecutar scraping ahora";
+  }
+}
+</script>
+
+</body>
+</html>

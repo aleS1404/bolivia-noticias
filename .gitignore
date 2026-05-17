@@ -1,0 +1,68 @@
+# ================================================================
+# .gitignore — Bolivia Noticias
+# Archivos que NO se suben a GitHub
+# ================================================================
+
+# Credenciales y configuración sensible
+.env
+
+# Base de datos local (puede pesar mucho y contiene datos privados)
+*.db
+*.sqlite
+*.sqlite3
+
+# Directorio de ChromaDB (vectores generados localmente)
+chroma_db/
+
+# Logs generados por el scraper
+*.log
+
+# Entorno virtual de Python
+venv/
+env/
+.venv/
+
+# Caché de Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+
+# Caché de sentence-transformers (modelos descargados)
+.cache/
+*.pt
+*.bin
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Distribuciones de Python
+dist/
+build/
+*.egg-info/
+
+# Archivos locales de Streamlit
+.streamlit/secrets.toml
+
+# Logs específicos del pipeline
+logs_pipeline.txt
+bolivia_noticias.log
+
+# Modelos/cache locales
+models/
+sentence_transformers/
+hf_cache/
+
+# Archivos temporales
+*.tmp
+*.bak
+*.old

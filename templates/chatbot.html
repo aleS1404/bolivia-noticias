@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Bolivia Noticias — Chatbot</title>
+  <style>
+    :root {
+      --azul:    #1a56db;
+      --verde:   #057a55;
+      --gris-bg: #f3f4f6;
+      --gris-bd: #e5e7eb;
+      --texto:   #111827;
+      --muted:   #6b7280;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: var(--gris-bg); color: var(--texto); display: flex; flex-direction: column; height: 100vh; }
+
+    /* Navbar */
+    nav {
+      background: var(--azul); color: white; padding: 14px 24px;
+      display: flex; align-items: center; justify-content: space-between; flex-shrink: 0;
+    }
+    nav h1 { font-size: 1.2rem; font-weight: 600; }
+    nav a { color: white; text-decoration: none; margin-left: 20px; font-size: 0.9rem; }
+
+    /* Layout principal */
+    .chat-layout { display: flex; flex: 1; overflow: hidden; max-width: 1100px; width: 100%; margin: 0 auto; gap: 0; }
+
+    /* Panel lateral de modos */
+    .sidebar {
+      width: 220px; flex-shrink: 0; background: white;
+      border-right: 1px solid var(--gris-bd); padding: 20px 16px;
+    }
+    .sidebar h3 { font-size: 0.8rem; text-transform: uppercase; color: var(--muted); letter-spacing: 0.05em; margin-bottom: 12px; }
+    .modo-btn {
+      width: 100%; text-align: left; padding: 10px 12px; margin-bottom: 8px;
+      border: 1px solid var(--gris-bd); border-radius: 8px; background: white;
+      cursor: pointer; font-size: 0.88rem; color: var(--texto); transition: all 0.15s;
+    }
+    .modo-btn:hover { background: #eff6ff; border-color: var(--azul); }
+    .modo-btn.activo { background: #eff6ff; border-color: var(--azul); color: var(--azul); font-weight: 500; }
+    .modo-desc { font-size: 0.78rem; color: var(--muted); margin-top: 16px; line-height: 1.5; }
+
+    /* Área del chat */
+    .chat-area { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    .mensajes {
+      flex: 1; overflow-y: auto; padding: 24px 20px;
+      display: flex; flex-direction: column; gap: 16px;
+    }
+
+    /* Burbujas */
+    .burbuja {
+      max-width: 75%; padding: 12px 16px; border-radius: 12px;
+      font-size: 0.9rem; line-height: 1.6; white-space: pre-wrap;
+    }
+    .burbuja.usuario {
+      align-self: flex-end; background: var(--azul); color: white;
+      border-bottom-right-radius: 4px;
+    }
+    .burbuja.bot {
+      align-self: flex-start; background: white;
+      border: 1px solid var(--gris-bd); border-bottom-left-radius: 4px;
+    }
+    .burbuja.bot.cargando { color: var(--muted); font-style: italic; }
+
+    /* Input */
+    .input-area {
+      padding: 16px 20px; background: white; border-top: 1px solid var(--gris-bd);
+      display: flex; gap: 10px; align-items: flex-end;
+    }
+    textarea {
+      flex: 1; border: 1px solid var(--gris-bd); border-radius: 8px;
+      padding: 10px 14px; font-size: 0.9rem; font-family: inherit;
+      resize: none; min-height: 44px; max-height: 120px; outline: none;
+      line-height: 1.5;
+    }
+    textarea:focus { border-color: var(--azul); }
+    button.enviar {
+      background: var(--azul); color: white; border: none;
+      padding: 10px 20px; border-radius: 8px; cursor: pointer;
+      font-size: 0.9rem; font-weight: 500; white-space: nowrap;
+    }
+    button.enviar:hover { background: #1648c0; }
+    button.enviar:disabled { background: var(--muted); cursor: not-allowed; }
+
+    /* Mensaje de bienvenida */
+    .bienvenida {
+      text-align: center; color: var(--muted); padding: 40px 20px;
+      font-size: 0.9rem; line-height: 1.7;
+    }
+    .bienvenida h2 { color: var(--texto); font-size: 1.1rem; margin-bottom: 8px; }
+  </style>
+</head>
+<body>
+
+<nav>
+  <h1>🤖 Chatbot Bolivia Noticias</h1>
+  <div>
+    <a href="/">Dashboard</a>
+    <a href="/chatbot">Chatbot</a>
+  </div>
+</nav>
+
+<div class="chat-layout">
+
+  <!-- Sidebar de modos -->
+  <div class="sidebar">
+    <h3>Modo de consulta</h3>
+    <button class="modo-btn activo" onclick="setModo('general', this)">
+      📰 General
+    </button>
+    <button class="modo-btn" onclick="setModo('ruta', this)">
+      🗺️ Ruta y bloqueos
+    </button>
+    <button class="modo-btn" onclick="setModo('fact_checking', this)">
+      🔍 Fact-checking
+    </button>
+    <p class="modo-desc" id="desc-modo">
+      Haz cualquier pregunta sobre las noticias recientes de Bolivia.
+    </p>
+  </div>
+
+  <!-- Área de chat -->
+  <div class="chat-area">
+    <div class="mensajes" id="mensajes">
+      <div class="bienvenida">
+        <h2>Chatbot basado en noticias reales</h2>
+        <p>Respondo <strong>exclusivamente</strong> con información<br>
+        de Los Tiempos y El Deber indexada en la base de datos.</p>
+      </div>
+    </div>
+
+    <div class="input-area">
+      <textarea id="input-texto"
+        placeholder="Escribe tu pregunta... (Enter para enviar, Shift+Enter para nueva línea)"
+        rows="1"></textarea>
+      <button class="enviar" id="btn-enviar" onclick="enviarMensaje()">Enviar</button>
+    </div>
+  </div>
+
+</div>
+
+<script>
+let modoActual = "general";
+
+const descripciones = {
+  general:       "Haz cualquier pregunta sobre las noticias recientes de Bolivia.",
+  ruta:          "Pregunta si hay paso libre o bloqueos entre ciudades. Ej: '¿Hay paso en la ruta La Paz - Oruro?'",
+  fact_checking: "Pega un texto o titular y verificaré si coincide con lo reportado por los medios."
+};
+
+function setModo(modo, btn) {
+  modoActual = modo;
+  document.querySelectorAll(".modo-btn").forEach(b => b.classList.remove("activo"));
+  btn.classList.add("activo");
+  document.getElementById("desc-modo").textContent = descripciones[modo];
+}
+
+function agregarBurbuja(texto, tipo) {
+  const div = document.createElement("div");
+  div.className = `burbuja ${tipo}`;
+  div.textContent = texto;
+  const contenedor = document.getElementById("mensajes");
+
+  // Eliminar bienvenida si existe
+  const bienvenida = contenedor.querySelector(".bienvenida");
+  if (bienvenida) bienvenida.remove();
+
+  contenedor.appendChild(div);
+  contenedor.scrollTop = contenedor.scrollHeight;
+  return div;
+}
+
+async function enviarMensaje() {
+  const input = document.getElementById("input-texto");
+  const pregunta = input.value.trim();
+  if (!pregunta) return;
+
+  const btn = document.getElementById("btn-enviar");
+  btn.disabled = true;
+  input.value = "";
+  input.style.height = "auto";
+
+  agregarBurbuja(pregunta, "usuario");
+  const burbujaBot = agregarBurbuja("Procesando…", "bot cargando");
+
+  try {
+    const resp = await fetch("/api/chat", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ pregunta, modo: modoActual })
+    });
+    const data = await resp.json();
+    burbujaBot.className = "burbuja bot";
+    burbujaBot.textContent = data.respuesta || data.error || "Sin respuesta.";
+  } catch (e) {
+    burbujaBot.className = "burbuja bot";
+    burbujaBot.textContent = `Error de conexión: ${e}`;
+  } finally {
+    btn.disabled = false;
+    input.focus();
+  }
+}
+
+// Enter para enviar, Shift+Enter para nueva línea
+document.getElementById("input-texto").addEventListener("keydown", function(e) {
+  if (e.key === "Enter" && !e.shiftKey) {
+    e.preventDefault();
+    enviarMensaje();
+  }
+  // Auto-resize del textarea
+  this.style.height = "auto";
+  this.style.height = Math.min(this.scrollHeight, 120) + "px";
+});
+</script>
+
+</body>
+</html>

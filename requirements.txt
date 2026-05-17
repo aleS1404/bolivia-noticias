@@ -1,0 +1,36 @@
+# Bolivia Noticias — Dependencias del proyecto
+# Instalar con: pip install -r requirements.txt
+
+# --- Web scraping ---
+requests==2.31.0          # Peticiones HTTP
+beautifulsoup4==4.12.3    # Parser HTML
+fake-useragent==1.5.1     # Rotación de User-Agents anti-bloqueo
+
+# --- Base de datos ---
+# sqlite3 ya viene incluido en Python — no se necesita instalar
+
+# --- Embeddings y vector store ---
+chromadb==0.5.3                      # Base de datos vectorial local
+sentence-transformers==3.0.1         # Modelo de embeddings multilingüe local
+
+# --- LLM (API de Google Gemini) ---
+google-generativeai==0.7.2           # Cliente oficial de Gemini API
+
+# --- Web framework (dashboard) ---
+flask==3.0.3                         # Servidor web liviano
+
+# --- Variables de entorno ---
+python-dotenv==1.0.1                 # Carga .env automáticamente
+
+#lxml==5.2.2
+urllib3==2.2.2
+cloudscraper==1.2.71
+
+# Streamlit dashboard
+streamlit==1.36.0
+pandas==2.2.2
+plotly==5.22.0
+
+# Machine learning local (TF-IDF)
+scikit-learn==1.5.1
+

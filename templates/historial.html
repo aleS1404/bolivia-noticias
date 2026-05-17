@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Historial de ediciones</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: system-ui, sans-serif; background: #f3f4f6; color: #111827; }
+    nav { background: #1a56db; color: white; padding: 14px 24px; display: flex; align-items: center; justify-content: space-between; }
+    nav h1 { font-size: 1.2rem; font-weight: 600; }
+    nav a { color: white; text-decoration: none; margin-left: 20px; font-size: 0.9rem; }
+    main { max-width: 900px; margin: 28px auto; padding: 0 16px; }
+    h2 { font-size: 1rem; font-weight: 600; margin-bottom: 16px; }
+    .url { font-size: 0.82rem; color: #6b7280; margin-bottom: 24px; word-break: break-all; }
+    .version {
+      background: white; border: 1px solid #e5e7eb; border-radius: 10px;
+      padding: 20px; margin-bottom: 16px;
+    }
+    .version-header { display: flex; justify-content: space-between; margin-bottom: 10px; }
+    .version-titulo { font-weight: 600; font-size: 0.95rem; }
+    .version-fecha { font-size: 0.82rem; color: #6b7280; }
+    .version-texto { font-size: 0.88rem; line-height: 1.6; color: #374151; margin-top: 10px; }
+    .sin-historial { text-align: center; padding: 48px; color: #6b7280; font-size: 0.9rem; }
+    a.volver { display: inline-block; margin-bottom: 20px; color: #1a56db; font-size: 0.88rem; text-decoration: none; }
+    a.volver:hover { text-decoration: underline; }
+  </style>
+</head>
+<body>
+<nav>
+  <h1>📋 Historial de ediciones</h1>
+  <div><a href="/">Dashboard</a><a href="/chatbot">Chatbot</a></div>
+</nav>
+<main>
+  <a class="volver" href="/">← Volver al dashboard</a>
+  <h2>Versiones anteriores de la noticia</h2>
+  <div class="url">{{ url }}</div>
+
+  {% if historial %}
+    {% for h in historial %}
+    <div class="version">
+      <div class="version-header">
+        <span class="version-titulo">{{ h.titulo }}</span>
+        <span class="version-fecha">Guardado: {{ h.fecha_cambio }}</span>
+      </div>
+      <div class="version-texto">{{ h.texto_anterior[:500] }}{% if h.texto_anterior|length > 500 %}…{% endif %}</div>
+    </div>
+    {% endfor %}
+  {% else %}
+    <div class="sin-historial">Esta noticia no tiene ediciones registradas.</div>
+  {% endif %}
+</main>
+</body>
+</html>
