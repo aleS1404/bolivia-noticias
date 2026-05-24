@@ -1,201 +1,421 @@
-# Bolivia Noticias — Proyecto de Minería de Datos
+# Bolivia Noticias — Streamlit + NLP + RAG
 
-Sistema de monitoreo de noticias, bloqueos de carreteras y fact-checking para Bolivia,
-construido con Python, SQLite, ChromaDB y la API de Gemini.
+Sistema inteligente de monitoreo de noticias bolivianas mediante **Web Scraping**, **Procesamiento de Lenguaje Natural (NLP)**, **Recuperación Semántica (RAG)** y **Dashboards Interactivos en Streamlit**.
 
-**Fuentes:** Los Tiempos · Red Uno  
-**Materia:** Minería de Datos
+El proyecto permite:
+
+- Extraer noticias automáticamente desde medios bolivianos.
+- Almacenar noticias en SQLite.
+- Clasificar noticias por tópicos.
+- Visualizar métricas y gráficos interactivos.
+- Consultar noticias mediante un chatbot con Gemini API.
+- Consultar noticias mediante un chatbot local TF-IDF.
+- Escuchar respuestas mediante voz IA con Edge-TTS.
+- Automatizar scraping mediante Windows Task Scheduler.
 
 ---
 
-## Estructura del proyecto
+# Tecnologías utilizadas
 
+| Tecnología | Uso |
+|---|---|
+| Python | Lenguaje principal |
+| Streamlit | Dashboard interactivo |
+| SQLite | Base de datos local |
+| ChromaDB | Base vectorial |
+| Gemini API | Chatbot RAG |
+| TF-IDF | Chatbot local |
+| Sentence Transformers | Embeddings |
+| BeautifulSoup | Parsing HTML |
+| Requests | Peticiones HTTP |
+| Edge-TTS | Voz IA |
+| Plotly | Visualizaciones |
+| Pandas | Manipulación de datos |
+
+---
+
+# Fuentes de noticias
+
+- Los Tiempos
+- El Deber
+
+---
+
+# Arquitectura del sistema
+
+```txt
+Portales Web
+     │
+     ▼
+scraper.py
+(Web Scraping)
+     │
+     ▼
+database.py
+(SQLite + historial)
+     │
+     ├──────────────► chatbot_local.py
+     │                 (TF-IDF + similitud coseno)
+     │
+     ▼
+chatbot.py
+(RAG + ChromaDB + Gemini)
+     │
+     ▼
+app.py
+(Streamlit Dashboard)
+     │
+     ▼
+Usuario final
 ```
+
+---
+
+# Estructura del proyecto
+
+```txt
 bolivia_noticias/
 │
-├── database.py              # Gestión de SQLite (noticias + historial)
-├── scraper.py               # Crawler y parser de Los Tiempos y Red Uno
-├── chatbot.py               # Chatbot RAG con Gemini y ChromaDB
-├── main.py                  # Orquestador + dashboard Flask
+├── app.py                    # Dashboard principal Streamlit
+├── chatbot.py                # Chatbot RAG con Gemini
+├── chatbot_local.py          # Chatbot TF-IDF local
+├── scraper.py                # Web scraping
+├── database.py               # Gestión SQLite
+├── voz_edge.py               # Voz IA con Edge-TTS
+├── main.py                   # Pipeline principal
 │
-├── templates/
-│   ├── index.html           # Dashboard principal
-│   ├── chatbot.html         # Interfaz del chatbot
-│   └── historial.html       # Historial de ediciones
+├── noticias.db               # Base de datos SQLite
+├── chroma_db/                # Base vectorial ChromaDB
 │
-├── requirements.txt         # Dependencias de Python
-├── .env.example             # Plantilla de variables de entorno
-├── .gitignore               # Archivos excluidos de Git
-└── ejecutar_pipeline.bat    # Script de automatización para Windows
+├── ejecutar_pipeline.bat     # Automatización Windows
+├── requirements.txt          # Dependencias
+├── README.md                 # Documentación
+├── .gitignore
+├── .env
+│
+├── templates/                # (legacy Flask)
+├── __pycache__/
+├── venv/
+└── venv312/
 ```
 
 ---
 
-## Instalación paso a paso (Windows 11)
+# Características principales
 
-### 1. Clonar o descargar el proyecto
+## Dashboard Streamlit
 
-```bash
-git clone https://github.com/tu-usuario/bolivia-noticias.git
-cd bolivia-noticias
+Incluye:
+
+- KPIs
+- Timeline de noticias
+- Noticias por tópico
+- Noticias por fecha
+- Filtros avanzados
+- Búsqueda textual
+- Visualizaciones interactivas
+
+---
+
+## Chatbot Gemini (RAG)
+
+Implementa:
+
+- Gemini API
+- Recuperación semántica
+- Embeddings
+- Búsqueda contextual
+- ChromaDB
+
+### Flujo
+
+```txt
+Pregunta usuario
+      │
+      ▼
+ChromaDB busca noticias relevantes
+      │
+      ▼
+Contexto enviado a Gemini
+      │
+      ▼
+Gemini responde usando SOLO noticias reales
 ```
 
-O simplemente descarga los archivos y colócalos en una carpeta.
+---
 
-### 2. Crear un entorno virtual (recomendado)
+## Chatbot Local (sin API)
 
-```bash
-python -m venv venv
-venv\Scripts\activate
+Implementa:
+
+- TF-IDF
+- Similitud de coseno
+- Recuperación local de noticias
+
+No necesita internet ni APIs externas.
+
+### Flujo
+
+```txt
+Noticias SQLite
+      │
+      ▼
+TF-IDF vectoriza corpus
+      │
+      ▼
+Consulta usuario
+      │
+      ▼
+Similitud coseno
+      │
+      ▼
+Top noticias relevantes
 ```
 
-Verás `(venv)` al inicio del prompt — eso confirma que está activo.
+---
 
-### 3. Instalar las dependencias
+## Voz IA
+
+Se implementó:
+
+- Edge-TTS
+- Conversión texto → voz
+- Reproducción automática
+
+---
+
+# Instalación
+
+## 1. Clonar repositorio
+
+```bash
+git clone https://github.com/TU-USUARIO/bolivia_noticias.git
+
+cd bolivia_noticias
+```
+
+---
+
+## 2. Crear entorno virtual
+
+### Python 3.12 recomendado
+
+```bash
+py -3.12 -m venv venv312
+```
+
+### Activar entorno
+
+```bash
+venv312\Scripts\activate
+```
+
+---
+
+## 3. Instalar dependencias
 
 ```bash
 pip install -r requirements.txt
 ```
 
-> **Nota:** La primera vez tarda varios minutos porque descarga el modelo
-> de embeddings `paraphrase-multilingual-MiniLM-L12-v2` (~120 MB).
+---
 
-### 4. Configurar la API Key de Gemini
+# Variables de entorno
 
-**Cómo obtener tu API Key gratuita:**
+Crear archivo:
 
-1. Ve a [https://aistudio.google.com/](https://aistudio.google.com/)
-2. Inicia sesión con tu cuenta de Google.
-3. Haz clic en **"Get API Key"** → **"Create API key in new project"**.
-4. Copia la clave generada.
-
-**Configurar el archivo `.env`:**
-
-```bash
-copy .env.example .env
+```txt
+.env
 ```
 
-Abre el archivo `.env` con cualquier editor de texto y reemplaza:
-```
-GEMINI_API_KEY="pega_tu_api_key_aqui"
+Agregar:
+
+```env
+GEMINI_API_KEY=TU_API_KEY
 ```
 
 ---
 
-## Uso
-
-### Ejecutar el pipeline completo + dashboard
+# Ejecutar Streamlit
 
 ```bash
-python main.py todo
+streamlit run app.py
 ```
 
-Abre tu navegador en [http://localhost:5000](http://localhost:5000)
+Abrir:
 
-### Solo scraping (sin dashboard)
+```txt
+http://localhost:8501
+```
+
+---
+
+# Ejecutar pipeline
 
 ```bash
 python main.py pipeline
 ```
 
-### Solo el dashboard (con datos ya existentes)
-
-```bash
-python main.py dashboard
-```
-
-### Probar cada módulo individualmente
-
-```bash
-# Probar la base de datos
-python database.py
-
-# Probar el scraper (tarda varios minutos por los delays)
-python scraper.py
-
-# Probar el chatbot en modo consola
-python chatbot.py
-```
-
 ---
 
-## Automatización con el Programador de Tareas de Windows
+# Automatización con Windows Task Scheduler
 
-Para que el scraper se ejecute automáticamente cada hora:
+El archivo:
 
-**Paso 1:** Edita el archivo `ejecutar_pipeline.bat` y actualiza la ruta del proyecto:
+```txt
+ejecutar_pipeline.bat
+```
+
+permite automatizar scraping cada hora.
+
+## Configuración
+
+### Paso 1
+
+Editar:
+
 ```bat
-SET PROYECTO=C:\Users\TuUsuario\bolivia_noticias
-```
-
-**Paso 2:** Abre el Programador de Tareas de Windows:
-- Presiona `Win + R` → escribe `taskschd.msc` → Enter
-
-**Paso 3:** Crea una nueva tarea básica:
-1. Panel derecho → **"Crear tarea básica..."**
-2. Nombre: `Bolivia Noticias Pipeline`
-3. Desencadenador: **Diariamente** (luego se ajusta)
-4. Acción: **Iniciar un programa**
-5. Programa: navega hasta `ejecutar_pipeline.bat`
-6. Finalizar.
-
-**Paso 4:** Ajustar a cada hora:
-1. Doble clic en la tarea creada → pestaña **"Desencadenadores"**
-2. Editar el desencadenador → marcar **"Repetir cada: 1 hora"**
-3. Duración: **Indefinidamente**
-4. Aceptar.
-
----
-
-## Cómo funciona el pipeline RAG
-
-```
-Portales web
-    │
-    ▼
-scraper.py  ←── Extrae título + cuerpo limpio + fecha
-    │
-    ▼
-database.py ←── Guarda en SQLite (detecta cambios, guarda historial)
-    │
-    ▼
-chatbot.py  ←── Convierte noticias en vectores → ChromaDB
-    │              Busca fragmentos relevantes → Gemini API
-    ▼
-Respuesta basada SOLO en noticias reales (sin alucinaciones)
+SET PROYECTO=C:\Users\TU_USUARIO\bolivia_noticias
 ```
 
 ---
 
-## Módulos: descripción técnica
+### Paso 2
 
-| Módulo | Función principal | Tecnologías |
-|--------|------------------|-------------|
-| `database.py` | Almacenamiento y versionado | SQLite + hashlib |
-| `scraper.py` | Extracción de noticias | requests + BeautifulSoup + fake-useragent |
-| `chatbot.py` | RAG + consultas al LLM | ChromaDB + sentence-transformers + Gemini |
-| `main.py` | Orquestación + API web | Flask |
+Abrir:
+
+```txt
+Task Scheduler
+```
+
+o:
+
+```txt
+Win + R → taskschd.msc
+```
 
 ---
 
-## Solución de problemas comunes
+### Paso 3
 
-**Error: `ModuleNotFoundError`**
+Crear tarea
+
+- Create Basic Task
+- Trigger → Daily
+- Action → Start a Program
+- Seleccionar `ejecutar_pipeline.bat`
+
+---
+
+### Paso 4
+
+Configurar repetición
+
+- Repeat task every → 1 hour
+- Duration → Indefinitely
+
+---
+
+# Librerías principales
+
+| Librería | Función |
+|---|---|
+| requests | Peticiones HTTP |
+| beautifulsoup4 | Parseo HTML |
+| fake-useragent | Rotación User-Agent |
+| pandas | Manipulación de datos |
+| plotly | Gráficos interactivos |
+| streamlit | Dashboard |
+| chromadb | Base vectorial |
+| sentence-transformers | Embeddings |
+| scikit-learn | TF-IDF + similitud |
+| google-generativeai | Gemini API |
+| edge-tts | Voz IA |
+| python-dotenv | Variables de entorno |
+
+---
+
+# Scraping y anti-bloqueo
+
+El scraper implementa:
+
+- Rotación de User-Agents
+- Delays aleatorios
+- Headers HTTP realistas
+- Requests persistentes
+- Manejo de errores
+
+---
+
+# Funcionalidades NLP
+
+## Implementadas
+
+- Vectorización TF-IDF
+- Embeddings semánticos
+- Similitud coseno
+- Recuperación contextual
+- RAG
+- Clasificación temática
+
+---
+
+# Tópicos automáticos
+
+El sistema clasifica noticias automáticamente:
+
+- Política
+- Economía
+- Salud
+- Educación
+- Deportes
+- Seguridad
+- Bloqueos y rutas
+- General
+
+---
+
+# Ejemplo de ejecución
+
+## Pipeline
+
 ```bash
-# Asegúrate de tener el entorno virtual activo
-venv\Scripts\activate
-pip install -r requirements.txt
+python main.py pipeline
 ```
 
-**Error: `GEMINI_API_KEY not found`**
-- Verifica que el archivo `.env` existe (no `.env.example`).
-- Verifica que la clave no tiene espacios extra.
+## Dashboard
 
-**El scraper no extrae noticias**
-- Algunos días los portales cambian su estructura HTML.
-- Prueba acceder manualmente a `https://www.lostiempos.com/actualidad` en el navegador.
-- Revisa el archivo `bolivia_noticias.log` para ver el detalle del error.
+```bash
+streamlit run app.py
+```
 
-**ChromaDB tarda mucho la primera vez**
-- Normal: está descargando el modelo de embeddings (~120 MB).
-- Las ejecuciones siguientes son instantáneas porque usa la caché local.
+---
+
+# Posibles mejoras futuras
+
+- Docker
+- PostgreSQL
+- Redis
+- Modelos LLM locales
+- Speech-to-text
+- Mapas interactivos
+- Clasificación automática avanzada
+- Deploy cloud
+- Kubernetes
+- Fine-tuning
+
+---
+
+# Autor
+
+Proyecto académico desarrollado para la materia de:
+
+**Minería de Datos / NLP / Inteligencia Artificial**
+
+Universidad Mayor de San Andrés — UMSA
+
+---
+
+# Licencia
+
+Uso académico y educativo.

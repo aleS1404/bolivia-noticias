@@ -586,6 +586,22 @@ with tab_gemini:
                     unsafe_allow_html=True,
                 )
 
+                if msg.get("audio"):
+                    import base64
+
+                    audio_base64 = base64.b64encode(msg["audio"]).decode()
+
+                    audio_html = f"""
+                    <audio autoplay controls>
+                        <source src="data:audio/mp3;base64,{audio_base64}" type="audio/mp3">
+                    </audio>
+                    """
+
+                    st.markdown(audio_html, unsafe_allow_html=True)
+
+                if msg.get("audio_error"):
+                    st.warning(msg["audio_error"])
+
         # Input
         with st.form("form_gemini", clear_on_submit=True):
             pregunta_g = st.text_area(
@@ -596,28 +612,94 @@ with tab_gemini:
             enviado_g = st.form_submit_button("Enviar →", use_container_width=True)
 
         if enviado_g and pregunta_g.strip():
+
+            # Guardar mensaje usuario
             st.session_state.historial_gemini.append(
                 {"rol": "usuario", "texto": pregunta_g}
             )
+            st.session_state.pop("audio_gemini", None)
+            st.session_state.pop("audio_gemini_error", None)
+
+            respuesta = ""
+
+            # =========================
+            # CONSULTAR GEMINI
+            # =========================
             with st.spinner("Consultando Gemini…"):
+
                 try:
                     respuesta = bot_gemini.consultar(
-                        pregunta_g.strip(), modo=modos_map[modo]
+                        pregunta_g.strip(),
+                        modo=modos_map[modo]
                     )
+
                 except Exception as e:
+
                     err = str(e).lower()
+
                     if "429" in err or "quota" in err:
                         respuesta = (
-                            "🚫 La cuota de Gemini se agotó temporalmente. "
-                            "Prueba el Chatbot Local (pestaña 🧠) que no usa API."
+                            "🚫 La cuota de Gemini se agotó temporalmente.\n\n"
+                            "Prueba el Chatbot Local (🧠) que no usa API."
                         )
+
                     else:
                         respuesta = f"Error: {e}"
+
+            # =========================
+            # GUARDAR RESPUESTA
+            # =========================
+            audio_bytes = None
+            audio_error = None
+
+            try:
+                from voz_edge import texto_a_voz_edge
+                audio_bytes = texto_a_voz_edge(respuesta)
+            except Exception as e:
+                audio_error = "⚠️ No se pudo generar audio con Edge-TTS."
+                print("Error Edge-TTS:", e)
+
             st.session_state.historial_gemini.append(
-                {"rol": "bot", "texto": respuesta}
+                {
+                    "rol": "bot",
+                    "texto": respuesta,
+                    "audio": audio_bytes,
+                    "audio_error": audio_error,
+                }
             )
+
+            # =========================
+            # GENERAR AUDIO
+            # =========================
+            if "audio_gemini" in st.session_state:
+                st.audio(
+                    st.session_state.audio_gemini,
+                    format="audio/mp3"
+                )
+
+            if "audio_gemini_error" in st.session_state:
+                st.warning(
+                    st.session_state.audio_gemini_error
+                )
+
             st.rerun()
 
+        # =========================
+        # AUDIO EDGE-TTS
+        # =========================
+
+        if "audio_gemini" in st.session_state:
+
+            st.audio(
+                st.session_state.audio_gemini,
+                format="audio/mp3"
+            )
+
+        if "audio_gemini_error" in st.session_state:
+
+            st.warning(
+                st.session_state.audio_gemini_error
+            )
         if st.button("🗑 Limpiar conversación", key="limpiar_gemini"):
             st.session_state.historial_gemini = []
             st.rerun()
